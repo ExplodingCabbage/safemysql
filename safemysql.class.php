@@ -19,6 +19,7 @@
  * Supported placeholders at the moment are:
  * 
  * ?s ("string")              - strings (also DATE, FLOAT and DECIMAL)
+ * ?b ("boolean")             - booleans (can accept true, false, 1, 0, "1", or "0")
  * ?i ("integer")             - integers
  * ?n ("name")                - identifiers (table and field names)
  * ?a ("array")               - complex placeholder for IN () clauses (expects an array of values; the
@@ -577,6 +578,9 @@ class SafeMySQL
 				case '?i':
 					$part = $this->escapeInt($value);
 					break;
+				case '?b':
+					$part = $this->escapeBool($value);
+					break;
 				case '?a':
 					$part = $this->createIN($value);
 					break;
@@ -614,6 +618,20 @@ class SafeMySQL
 			$value = number_format($value, 0, '.', ''); // may lose precision on big numbers
 		} 
 		return $value;
+	}
+
+	private function escapeBool($value)
+	{
+		if ($value === true || $value === 1 || $value === '1')
+		{
+			return 'TRUE';
+		} else if ($value === false || $value === 0 || $value === '0') {
+			return 'FALSE';
+		} else {
+			$this->error("Boolean (?b) placeholder expects boolean value or 1 or 0, ".gettype($value)." given");
+			return FALSE;
+		}
+
 	}
 
 	private function escapeString($value)
